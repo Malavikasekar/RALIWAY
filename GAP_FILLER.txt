@@ -1,0 +1,58 @@
+
+
+#include <Servo.h>
+#include <LiquidCrystal.h>
+
+#define trigPin 9
+#define echoPin 10
+#define buzzer 7
+#define servoPin 6
+
+Servo gapFiller;
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(buzzer, OUTPUT);
+
+  gapFiller.attach(servoPin);
+  gapFiller.write(0);  // Initial position
+
+  lcd.begin(16, 2);
+  lcd.print("System Ready");
+  delay(1000);
+  lcd.clear();
+}
+
+void loop() {
+  long duration;
+  int distance;
+
+  // Trigger the sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure distance
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  if (distance < 30) { // Train detected within 30cm
+    lcd.clear();
+    lcd.print("Train Incoming!");
+    tone(buzzer, 1000);  // Beep
+    gapFiller.write(90); // Deploy gap filler
+    delay(3000);
+    noTone(buzzer);
+  } else {
+    lcd.clear();
+    lcd.print("No Train");
+    gapFiller.write(0);  // Retract filler
+  }
+
+  delay(1000);
+}
+
